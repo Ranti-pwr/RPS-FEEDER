@@ -36,17 +36,16 @@ def apakah_baris_sampah(teks_materi):
 def konversi_doc_ke_docx(folder_path):
     """Fungsi untuk mencari file .doc dan mengonversinya menjadi .docx"""
     if win32 is None:
-        return # Keluar jika pywin32 tidak terinstall
+        return 
 
     doc_files = [f for f in os.listdir(folder_path) if f.lower().endswith(".doc") and not f.startswith("~")]
     
     if not doc_files:
-        return # Jika tidak ada file .doc, langsung lanjut ke proses ekstraksi
+        return 
         
     print(f"🔄 Mendeteksi {len(doc_files)} file berformat .doc lama. Memulai konversi ke .docx...")
     
     try:
-        # Membuka Microsoft Word di latar belakang
         word = win32.Dispatch('Word.Application')
         word.Visible = False
         
@@ -73,7 +72,6 @@ def konversi_doc_ke_docx(folder_path):
 
 
 def ekstrak_materi_rps(folder_path):
-    # JALANKAN PROSES KONVERSI TERLEBIH DAHULU (Jika ada)
     konversi_doc_ke_docx(folder_path)
     
     print("MEMULAI EKSTRAKSI DOKUMEN...")
@@ -81,7 +79,6 @@ def ekstrak_materi_rps(folder_path):
     all_data = []
     translator = GoogleTranslator(source='id', target='en')
     
-    # Ambil semua file yang sekarang berformat .docx
     files = [f for f in os.listdir(folder_path) if f.endswith(".docx") and not f.startswith("~")]
     total_files = len(files)
 
@@ -103,7 +100,6 @@ def ekstrak_materi_rps(folder_path):
                 if len(table.rows) == 0: continue
                 baris_mulai = -1
                 
-                # CARI HEADER DENGAN KUNCI GANDA
                 for row_idx, row in enumerate(table.rows):
                     seluruh_sel = [teks_kunci(c.text) for c in row.cells]
                     
@@ -130,7 +126,6 @@ def ekstrak_materi_rps(folder_path):
                         tabel_utama_ditemukan = True
                         break 
 
-                # Jika tidak ada header, tapi sebelumnya tabel sudah ketemu -> Ini Split Table
                 if baris_mulai == -1 and tabel_utama_ditemukan:
                     teks_awal = teks_kunci(table.rows[0].cells[0].text)
                     
@@ -139,14 +134,14 @@ def ekstrak_materi_rps(folder_path):
                         continue
                     baris_mulai = 0 
 
-                # AMBIL DATA MATERI
+                
                 if tabel_utama_ditemukan and baris_mulai != -1:
                     for row in table.rows[baris_mulai:]:
                         if len(row.cells) <= max(col_waktu, col_materi): continue
                         
                         teks_baris_full = teks_kunci(" ".join([c.text for c in row.cells]))
 
-                        # berhenti jika ketemu kata kunci referensi
+            
                         if any(k in teks_baris_full for k in ["daftarreferensi", "daftarpustaka"]):
                             tabel_utama_ditemukan = False
                             break 
@@ -154,7 +149,6 @@ def ekstrak_materi_rps(folder_path):
                         teks_waktu = bersihkan_teks(row.cells[col_waktu].text)
                         teks_materi = bersihkan_teks(row.cells[col_materi].text)
 
-                        # VALIDASI ANGKA: Kolom waktu wajib punya angka
                         if teks_waktu and len(teks_waktu) <= 15 and any(char.isdigit() for char in teks_waktu):
                             minggu_saat_ini = teks_waktu
                         
@@ -179,7 +173,6 @@ def ekstrak_materi_rps(folder_path):
                 print("GAGAL (Tabel materi utama tidak terdeteksi)")
                 continue
 
-            # GABUNGKAN PER PERTEMUAN DAN TERJEMAHKAN
             final_materi_list = []
             pertemuan_labels = []
             
@@ -190,7 +183,6 @@ def ekstrak_materi_rps(folder_path):
 
             materi_inggris_list = []
             try:
-                # memisahkan baris dengan HTML agar Google Translator tidak menghapus baris baru
                 teks_terjemahan = [m.replace('\n', ' <br> ') for m in final_materi_list]
                 hasil_inggris = translator.translate_batch(teks_terjemahan)
                 materi_inggris_list = [h.replace(' <br> ', '\n').replace('<br>', '\n') for h in hasil_inggris]
@@ -202,13 +194,13 @@ def ekstrak_materi_rps(folder_path):
                     except:
                         materi_inggris_list.append("")
 
-            # SUSUN BARIS EXCEL
             for i in range(len(final_materi_list)):
                 all_data.append({
                     "Kode Mata Kuliah": nama_mk,
                     "Pertemuan": pertemuan_labels[i],
                     "Materi Indonesia": final_materi_list[i],
-                    "Materi Inggris": materi_inggris_list[i] if i < len(materi_inggris_list) else ""
+                    # "Materi Inggris": materi_inggris_list[i] if i < len(materi_inggris_list) else ""
+                    "Materi Inggris": ""
                 })
             
             for _ in range(3):
@@ -219,7 +211,6 @@ def ekstrak_materi_rps(folder_path):
         except Exception as e:
             print(f"ERROR: {e}")
 
-    # PEMBUATAN EXCEL
     if all_data:
         print("\nMenyusun dan merapikan file Excel...")
         df = pd.DataFrame(all_data)

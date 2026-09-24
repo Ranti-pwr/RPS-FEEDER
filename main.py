@@ -181,18 +181,18 @@ def ekstrak_materi_rps(folder_path):
                     final_materi_list.append("\n".join(list_materi))
                     pertemuan_labels.append(minggu)
 
-            materi_inggris_list = []
-            try:
-                teks_terjemahan = [m.replace('\n', ' <br> ') for m in final_materi_list]
-                hasil_inggris = translator.translate_batch(teks_terjemahan)
-                materi_inggris_list = [h.replace(' <br> ', '\n').replace('<br>', '\n') for h in hasil_inggris]
-            except Exception:
-                for m in final_materi_list:
-                    try:
-                        res = translator.translate(m.replace('\n', ' <br> '))
-                        materi_inggris_list.append(res.replace(' <br> ', '\n').replace('<br>', '\n'))
-                    except:
-                        materi_inggris_list.append("")
+            # materi_inggris_list = []
+            # try:
+            #     teks_terjemahan = [m.replace('\n', ' <br> ') for m in final_materi_list]
+            #     hasil_inggris = translator.translate_batch(teks_terjemahan)
+            #     materi_inggris_list = [h.replace(' <br> ', '\n').replace('<br>', '\n') for h in hasil_inggris]
+            # except Exception:
+            #     for m in final_materi_list:
+            #         try:
+            #             res = translator.translate(m.replace('\n', ' <br> '))
+            #             materi_inggris_list.append(res.replace(' <br> ', '\n').replace('<br>', '\n'))
+            #         except:
+            #             materi_inggris_list.append("")
 
             for i in range(len(final_materi_list)):
                 all_data.append({
